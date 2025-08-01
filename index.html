@@ -18,10 +18,18 @@
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    label, select, input {
+    label, select, input, table {
       display: block;
       margin-top: 1em;
       width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1em;
+    }
+    td, th {
+      padding: 0.5em;
     }
     button {
       margin-top: 1.5em;
@@ -48,8 +56,20 @@
       <option value="19">19 (4 players)</option>
     </select>
 
-    <label for="digits">Enter 5 skill levels (1-9), separated by comma:</label>
-    <input type="text" id="digits" placeholder="e.g., 3,4,5,6,7">
+    <label>Enter up to 8 player skill levels (1-9):</label>
+    <table>
+      <tbody>
+        <script>
+          for (let i = 1; i <= 8; i++) {
+            document.write(`<tr><td>Player ${i}</td><td><select id="player${i}"><option value="">--</option>`);
+            for (let j = 1; j <= 9; j++) {
+              document.write(`<option value="${j}">${j}</option>`);
+            }
+            document.write(`</select></td></tr>`);
+          }
+        </script>
+      </tbody>
+    </table>
 
     <button onclick="findCombinations()">Show Valid Combinations</button>
 
@@ -59,28 +79,46 @@
   <script>
     function findCombinations() {
       const teamSL = parseInt(document.getElementById('teamSL').value);
-      const digitsInput = document.getElementById('digits').value;
-      const resultDiv = document.getElementById('result');
-      const players = digitsInput.split(',').map(n => parseInt(n.trim())).filter(n => n >= 1 && n <= 9);
+      const players = [];
 
+      for (let i = 1; i <= 8; i++) {
+        const val = document.getElementById(`player${i}`).value;
+        if (val !== '') {
+          players.push(parseInt(val));
+        }
+      }
+
+      const resultDiv = document.getElementById('result');
       resultDiv.innerHTML = '';
 
-      if ((teamSL === 23 && players.length !== 5) || (teamSL === 19 && players.length !== 5)) {
-        resultDiv.innerHTML = '<p>Please enter exactly five numbers between 1 and 9.</p>';
+      if (players.length < (teamSL === 23 ? 5 : 4)) {
+        resultDiv.innerHTML = '<p>Please select enough players to form a team.</p>';
         return;
       }
 
       const k = teamSL === 23 ? 5 : 4;
       const combinations = getCombinations(players, k).filter(comb => comb.reduce((a,b) => a + b, 0) <= teamSL);
 
-      if (combinations.length === 0) {
+      const uniqueSet = new Set();
+      const uniqueCombinations = [];
+
+      combinations.forEach(comb => {
+        const sorted = [...comb].sort((a, b) => a - b);
+        const key = sorted.join(',');
+        if (!uniqueSet.has(key)) {
+          uniqueSet.add(key);
+          uniqueCombinations.push({ combo: sorted, sum: sorted.reduce((a, b) => a + b, 0) });
+        }
+      });
+
+      if (uniqueCombinations.length === 0) {
         resultDiv.innerHTML = '<p>No valid combinations found.</p>';
         return;
       }
 
       let html = '<ul>';
-      combinations.forEach(comb => {
-        html += `<li>${comb.join(', ')}</li>`;
+      uniqueCombinations.forEach(item => {
+        html += `<li>${item.combo.join(', ')} (Total: ${item.sum})</li>`;
       });
       html += '</ul>';
 
