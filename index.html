@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Team SL Combinations</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 1em;
+      background-color: #f4f4f4;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 2em;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    label, select, input {
+      display: block;
+      margin-top: 1em;
+      width: 100%;
+    }
+    button {
+      margin-top: 1.5em;
+      width: 100%;
+      padding: 1em;
+      font-size: 1em;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    ul {
+      margin-top: 1em;
+      padding-left: 1em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Team SL Combination Checker</h2>
+    <label for="teamSL">Team SL:</label>
+    <select id="teamSL">
+      <option value="23">23 (5 players)</option>
+      <option value="19">19 (4 players)</option>
+    </select>
+
+    <label for="digits">Enter 5 skill levels (1-9), separated by comma:</label>
+    <input type="text" id="digits" placeholder="e.g., 3,4,5,6,7">
+
+    <button onclick="findCombinations()">Show Valid Combinations</button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    function findCombinations() {
+      const teamSL = parseInt(document.getElementById('teamSL').value);
+      const digitsInput = document.getElementById('digits').value;
+      const resultDiv = document.getElementById('result');
+      const players = digitsInput.split(',').map(n => parseInt(n.trim())).filter(n => n >= 1 && n <= 9);
+
+      resultDiv.innerHTML = '';
+
+      if ((teamSL === 23 && players.length !== 5) || (teamSL === 19 && players.length !== 5)) {
+        resultDiv.innerHTML = '<p>Please enter exactly five numbers between 1 and 9.</p>';
+        return;
+      }
+
+      const k = teamSL === 23 ? 5 : 4;
+      const combinations = getCombinations(players, k).filter(comb => comb.reduce((a,b) => a + b, 0) <= teamSL);
+
+      if (combinations.length === 0) {
+        resultDiv.innerHTML = '<p>No valid combinations found.</p>';
+        return;
+      }
+
+      let html = '<ul>';
+      combinations.forEach(comb => {
+        html += `<li>${comb.join(', ')}</li>`;
+      });
+      html += '</ul>';
+
+      resultDiv.innerHTML = html;
+    }
+
+    function getCombinations(arr, k) {
+      const result = [];
+      function combine(path, start) {
+        if (path.length === k) {
+          result.push([...path]);
+          return;
+        }
+        for (let i = start; i < arr.length; i++) {
+          path.push(arr[i]);
+          combine(path, i + 1);
+          path.pop();
+        }
+      }
+      combine([], 0);
+      return result;
+    }
+  </script>
+</body>
+</html>
